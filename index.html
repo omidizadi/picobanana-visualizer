@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picobanana Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .footer p {
+            margin: 8px 0;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        .dataset-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dataset-selector label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        select, input[type="text"] {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select:hover, input[type="text"]:hover {
+            border-color: #667eea;
+        }
+
+        .search-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .search-box label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .search-input {
+            position: relative;
+        }
+
+        .search-input::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .search-input input {
+            padding-left: 45px;
+            width: 100%;
+        }
+
+        .load-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            align-self: end;
+        }
+
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .load-btn:active {
+            transform: translateY(0);
+        }
+
+        .load-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .pagination button {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-weight: 600;
+            color: #555;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .data-grid {
+            display: grid;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-index {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .card-content {
+            display: grid;
+            gap: 15px;
+        }
+
+        .field-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #888;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-value {
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            word-wrap: break-word;
+        }
+
+        .field-value.highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .images-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .image-wrapper.input-image {
+            border-color: #4CAF50;
+        }
+
+        .image-wrapper.output-image {
+            border-color: #2196F3;
+        }
+
+        .image-wrapper.rejected-image {
+            border-color: #f44336;
+        }
+
+        .image-wrapper:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+
+        .image-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            color: white;
+            padding: 8px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .keyboard-hint kbd {
+            background: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-family: monospace;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Image navigation hint in modal */
+        .modal-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .modal-hint kbd {
+            background: #555;
+            border: 1px solid #777;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-family: monospace;
+            color: white;
+        }
+
+        /* Image Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 10px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #bbb;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .images-container {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍌 Picobanana Visualizer</h1>
+        
+        <div class="controls">
+            <div class="dataset-selector">
+                <label for="dataset">Select Dataset</label>
+                <select id="dataset">
+                    <option value="">-- Choose a dataset --</option>
+                    <option value="multi-turn.jsonl">Multi-Turn Dataset</option>
+                    <option value="preference.jsonl">Preference Dataset</option>
+                    <option value="sft.jsonl">SFT Dataset</option>
+                </select>
+            </div>
+
+            <div class="search-box">
+                <label for="editType">Filter by Edit Type</label>
+                <select id="editType">
+                    <option value="">-- All Edit Types --</option>
+                </select>
+            </div>
+
+            <div class="search-box">
+                <label for="search">Search in Data</label>
+                <div class="search-input">
+                    <input type="text" id="search" placeholder="Search across all fields...">
+                </div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <span>📁 Dataset:</span>
+                <span class="stat-value" id="datasetName">-</span>
+            </div>
+            <div class="stat-item">
+                <span>📊 Total Records:</span>
+                <span class="stat-value" id="totalRecords">0</span>
+            </div>
+            <div class="stat-item">
+                <span>🔍 Filtered:</span>
+                <span class="stat-value" id="filteredRecords">0</span>
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="firstBtn">⏮ First</button>
+            <button id="prevBtn">← Previous</button>
+            <span class="page-info" id="pageInfo">Page 1 of 1</span>
+            <button id="nextBtn">Next →</button>
+            <button id="lastBtn">Last ⏭</button>
+        </div>
+
+        <div id="content">
+            <div class="empty-state">
+                <div class="empty-state-icon">📂</div>
+                <h2>No Data Loaded</h2>
+                <p>Select a dataset and click "Load Data" to get started</p>
+            </div>
+        </div>
+
+        <div class="keyboard-hint">
+            💡 Tip: Use <kbd>←</kbd> and <kbd>→</kbd> arrow keys to navigate between pages
+        </div>
+
+        <div class="footer">
+            <p>Created by: <a href="https://www.linkedin.com/in/omidrezaizadi/" target="_blank">Omid Reza Izadi</a></p>
+            <p>Original Paper: <a href="https://github.com/apple/pico-banana-400k" target="_blank">Apple Pico-Banana-400k</a></p>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-hint">
+            Use <kbd>←</kbd> <kbd>→</kbd> to navigate between images | <kbd>ESC</kbd> to close
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let searchTimeout = null;
+        let manifestUrls = {}; // Store manifest URLs for quick lookup
+        let currentImageList = []; // Store current card's images for navigation
+        let currentImageIndex = 0; // Current image index in modal
+
+        const elements = {
+            dataset: document.getElementById('dataset'),
+            editType: document.getElementById('editType'),
+            search: document.getElementById('search'),
+            content: document.getElementById('content'),
+            stats: document.getElementById('stats'),
+            pagination: document.getElementById('pagination'),
+            datasetName: document.getElementById('datasetName'),
+            totalRecords: document.getElementById('totalRecords'),
+            filteredRecords: document.getElementById('filteredRecords'),
+            pageInfo: document.getElementById('pageInfo'),
+            firstBtn: document.getElementById('firstBtn'),
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            lastBtn: document.getElementById('lastBtn'),
+            modal: document.getElementById('imageModal'),
+            modalImage: document.getElementById('modalImage'),
+            closeModal: document.querySelector('.close-modal')
+        };
+
+        // Auto-load dataset when selected
+        elements.dataset.addEventListener('change', loadData);
+
+        async function loadData() {
+            const selectedDataset = elements.dataset.value;
+            if (!selectedDataset) {
+                elements.content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📂</div>
+                        <h2>No Data Loaded</h2>
+                        <p>Select a dataset to get started</p>
+                    </div>
+                `;
+                elements.stats.style.display = 'none';
+                elements.pagination.style.display = 'none';
+                return;
+            }
+
+            elements.content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading data...</div>';
+
+            try {
+                // Load JSONL data
+                const response = await fetch(selectedDataset);
+                const text = await response.text();
+                
+                // Parse JSONL (one JSON object per line)
+                allData = text.trim().split('\n').map((line, index) => {
+                    try {
+                        return JSON.parse(line);
+                    } catch (e) {
+                        console.error(`Error parsing line ${index + 1}:`, e);
+                        return null;
+                    }
+                }).filter(item => item !== null);
+
+                // Load corresponding manifest file
+                const manifestName = selectedDataset.replace('.jsonl', '_manifest.txt');
+                await loadManifest(manifestName);
+
+                elements.datasetName.textContent = selectedDataset;
+                elements.totalRecords.textContent = allData.length;
+                
+                // Populate edit type filter
+                populateEditTypeFilter();
+                
+                // Apply initial filter/search
+                applySearch();
+                
+                elements.stats.style.display = 'flex';
+                elements.pagination.style.display = 'flex';
+                
+            } catch (error) {
+                elements.content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h2>Error Loading Data</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadManifest(manifestName) {
+            try {
+                const response = await fetch(manifestName);
+                const text = await response.text();
+                const urls = text.trim().split('\n');
+                
+                // Create a lookup map: filename -> full URL
+                manifestUrls = {};
+                urls.forEach(url => {
+                    const filename = url.split('/').pop();
+                    manifestUrls[filename] = url;
+                });
+                
+                console.log(`Loaded ${Object.keys(manifestUrls).length} URLs from manifest`);
+            } catch (error) {
+                console.warn('Could not load manifest file:', error);
+                manifestUrls = {};
+            }
+        }
+
+        function populateEditTypeFilter() {
+            // Extract unique edit types
+            const editTypes = new Set();
+            allData.forEach(item => {
+                if (item.edit_type) {
+                    editTypes.add(item.edit_type);
+                }
+            });
+
+            // Sort and populate dropdown
+            const sortedTypes = Array.from(editTypes).sort();
+            elements.editType.innerHTML = '<option value="">-- All Edit Types --</option>';
+            sortedTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                elements.editType.appendChild(option);
+            });
+        }
+
+        // Filter by edit type
+        elements.editType.addEventListener('change', () => {
+            applySearch();
+        });
+
+        // Search functionality
+        elements.search.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                applySearch();
+            }, 300);
+        });
+
+        function applySearch() {
+            const searchTerm = elements.search.value.toLowerCase().trim();
+            const selectedEditType = elements.editType.value;
+            
+            filteredData = allData.filter(item => {
+                // Filter by edit type
+                if (selectedEditType && item.edit_type !== selectedEditType) {
+                    return false;
+                }
+                
+                // Filter by search term
+                if (searchTerm && !searchInObject(item, searchTerm)) {
+                    return false;
+                }
+                
+                return true;
+            });
+
+            elements.filteredRecords.textContent = filteredData.length;
+            currentPage = 1;
+            renderPage();
+        }
+
+        function searchInObject(obj, searchTerm) {
+            if (typeof obj === 'string') {
+                return obj.toLowerCase().includes(searchTerm);
+            }
+            
+            if (Array.isArray(obj)) {
+                return obj.some(item => searchInObject(item, searchTerm));
+            }
+            
+            if (typeof obj === 'object' && obj !== null) {
+                return Object.values(obj).some(value => searchInObject(value, searchTerm));
+            }
+            
+            return false;
+        }
+
+        // Render current page
+        function renderPage() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            if (filteredData.length === 0) {
+                elements.content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h2>No Results Found</h2>
+                        <p>Try adjusting your search terms</p>
+                    </div>
+                `;
+                elements.pagination.style.display = 'none';
+                return;
+            }
+
+            elements.pagination.style.display = 'flex';
+            elements.pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            
+            // Update button states
+            elements.firstBtn.disabled = currentPage === 1;
+            elements.prevBtn.disabled = currentPage === 1;
+            elements.nextBtn.disabled = currentPage === totalPages;
+            elements.lastBtn.disabled = currentPage === totalPages;
+
+            // Render cards
+            const searchTerm = elements.search.value.toLowerCase().trim();
+            elements.content.innerHTML = '<div class="data-grid">' + 
+                pageData.map((item, index) => renderCard(item, startIndex + index + 1, searchTerm)).join('') + 
+                '</div>';
+
+            // Add image click handlers
+            document.querySelectorAll('.data-card').forEach(card => {
+                const images = Array.from(card.querySelectorAll('.image-wrapper img'));
+                images.forEach((img, imgIndex) => {
+                    img.addEventListener('click', () => {
+                        currentImageList = images.map(i => i.src);
+                        currentImageIndex = imgIndex;
+                        showImageModal(img.src);
+                    });
+                });
+            });
+        }
+
+        function showImageModal(src) {
+            elements.modalImage.src = src;
+            elements.modal.style.display = 'block';
+        }
+
+        function showNextImage() {
+            if (currentImageList.length > 0) {
+                currentImageIndex = (currentImageIndex + 1) % currentImageList.length;
+                elements.modalImage.src = currentImageList[currentImageIndex];
+            }
+        }
+
+        function showPrevImage() {
+            if (currentImageList.length > 0) {
+                currentImageIndex = (currentImageIndex - 1 + currentImageList.length) % currentImageList.length;
+                elements.modalImage.src = currentImageList[currentImageIndex];
+            }
+        }
+
+        function closeImageModal() {
+            elements.modal.style.display = 'none';
+            currentImageList = [];
+            currentImageIndex = 0;
+        }
+
+        function renderCard(item, globalIndex, searchTerm) {
+            let html = `
+                <div class="data-card">
+                    <div class="card-header">
+                        <span class="card-index">#${globalIndex}</span>
+                    </div>
+                    <div class="card-content">
+            `;
+
+            // Extract and display images
+            const images = extractImages(item);
+            
+            // Display other fields
+            for (const [key, value] of Object.entries(item)) {
+                if (shouldSkipField(key, value)) continue;
+
+                const displayValue = formatValue(value);
+                const isHighlighted = searchTerm && displayValue.toLowerCase().includes(searchTerm);
+                
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">${formatFieldName(key)}</div>
+                        <div class="field-value ${isHighlighted ? 'highlight' : ''}">${displayValue}</div>
+                    </div>
+                `;
+            }
+
+            // Add images at the end
+            if (images.length > 0) {
+                html += '<div class="field-group"><div class="field-label">Images</div><div class="images-container">';
+                images.forEach(img => {
+                    const cssClass = img.type === 'input' ? 'input-image' : 
+                                   img.type === 'output' ? 'output-image' : 
+                                   img.type === 'rejected' ? 'rejected-image' : '';
+                    html += `
+                        <div class="image-wrapper ${cssClass}">
+                            <img src="${img.url}" alt="${img.label}" loading="lazy" onerror="this.parentElement.style.display='none'">
+                            <div class="image-label">${img.label}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+
+            html += '</div></div>';
+            return html;
+        }
+
+        function extractImages(obj) {
+            const images = [];
+            
+            // Handle output_image field (sft and preference datasets)
+            if (obj.output_image) {
+                let fullUrl;
+                if (obj.output_image.startsWith('http://') || obj.output_image.startsWith('https://')) {
+                    fullUrl = obj.output_image;
+                } else {
+                    fullUrl = 'https://ml-site.cdn-apple.com/datasets/pico-banana-300k/nb/' + obj.output_image;
+                }
+                images.push({ url: fullUrl, label: 'Output Image', type: 'output' });
+            }
+            
+            // Handle files array (multi-turn dataset)
+            if (obj.files && Array.isArray(obj.files)) {
+                obj.files.forEach((file, index) => {
+                    if (file.url) {
+                        let fullUrl;
+                        // Check if URL is already a full URL (http/https)
+                        if (file.url.startsWith('http://') || file.url.startsWith('https://')) {
+                            fullUrl = file.url;
+                        } else {
+                            // It's a local path, prepend CDN base URL
+                            fullUrl = 'https://ml-site.cdn-apple.com/datasets/pico-banana-300k/nb/' + file.url;
+                        }
+                        const label = file.id ? formatFieldName(file.id) : `File ${index + 1}`;
+                        const type = file.id && file.id.includes('input') ? 'input' : 'output';
+                        images.push({ url: fullUrl, label, type });
+                    }
+                });
+            }
+            
+            // Handle rejected_images (preference dataset)
+            if (obj.rejected_images && Array.isArray(obj.rejected_images)) {
+                obj.rejected_images.forEach((imgUrl, index) => {
+                    let fullUrl;
+                    if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+                        fullUrl = imgUrl;
+                    } else {
+                        // Rejected images come with paths like "nano-banana-300k/images/rejected-edit/14.png"
+                        // We need to convert to "https://ml-site.cdn-apple.com/datasets/pico-banana-300k/nb/images/rejected-edit/14.png"
+                        if (imgUrl.startsWith('nano-banana-300k/')) {
+                            // Strip "nano-banana-300k/" and replace with proper CDN path
+                            const pathAfterPrefix = imgUrl.substring(17); // Remove 'nano-banana-300k/'
+                            fullUrl = 'https://ml-site.cdn-apple.com/datasets/pico-banana-300k/nb/' + pathAfterPrefix;
+                        } else {
+                            fullUrl = 'https://ml-site.cdn-apple.com/datasets/pico-banana-300k/nb/' + imgUrl;
+                        }
+                    }
+                    images.push({ url: fullUrl, label: `Rejected ${index + 1}`, type: 'rejected' });
+                });
+            }
+            
+            // Handle input URLs
+            if (obj.open_image_input_url) {
+                images.push({ url: obj.open_image_input_url, label: 'Input Image', type: 'input' });
+            }
+            
+            // Sort images: input first, then outputs, then rejected
+            const order = { 'input': 0, 'output': 1, 'rejected': 2 };
+            images.sort((a, b) => (order[a.type] || 3) - (order[b.type] || 3));
+            
+            return images;
+        }
+
+        function shouldSkipField(key, value) {
+            // Skip fields that are already shown as images
+            if (key === 'output_image' || key === 'open_image_input_url' || 
+                key === 'files' || key === 'rejected_images') {
+                return true;
+            }
+            return false;
+        }
+
+        function formatValue(value) {
+            if (Array.isArray(value)) {
+                // Check if it's an array of simple values
+                if (value.every(item => typeof item !== 'object')) {
+                    return value.map((item, index) => `${index + 1}. ${item}`).join('<br>');
+                }
+                return JSON.stringify(value, null, 2);
+            }
+            if (typeof value === 'object' && value !== null) {
+                return JSON.stringify(value, null, 2);
+            }
+            return String(value);
+        }
+
+        function formatFieldName(key) {
+            return key
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        // Pagination controls
+        elements.firstBtn.addEventListener('click', () => {
+            currentPage = 1;
+            renderPage();
+        });
+
+        elements.prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        });
+
+        elements.nextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+            }
+        });
+
+        elements.lastBtn.addEventListener('click', () => {
+            currentPage = Math.ceil(filteredData.length / itemsPerPage);
+            renderPage();
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            
+            // If modal is open, use arrows for image navigation
+            if (elements.modal.style.display === 'block') {
+                if (e.key === 'ArrowLeft') {
+                    showPrevImage();
+                } else if (e.key === 'ArrowRight') {
+                    showNextImage();
+                } else if (e.key === 'Escape') {
+                    closeImageModal();
+                }
+            } else {
+                // Otherwise, use arrows for page navigation
+                if (e.key === 'ArrowLeft') {
+                    elements.prevBtn.click();
+                } else if (e.key === 'ArrowRight') {
+                    elements.nextBtn.click();
+                }
+            }
+        });
+
+        // Modal controls
+        elements.closeModal.addEventListener('click', closeImageModal);
+
+        elements.modal.addEventListener('click', (e) => {
+            if (e.target === elements.modal) {
+                closeImageModal();
+            }
+        });
+    </script>
+</body>
+</html>
