@@ -1,5 +1,10 @@
 # Picobanana Visualizer
 
+<img width="1459" height="1218" alt="Screenshot 2025-11-13 at 11 04 15 AM" src="https://github.com/user-attachments/assets/6a0822b0-3e39-47c4-8ec4-a47b98213c1d" />
+
+
+Quick online version: https://snazzy-babka-ffa8f6.netlify.app/
+
 ## Required Files
 
 Download the following files from the [Picobanana repository](https://github.com/apple/pico-banana-400k):
